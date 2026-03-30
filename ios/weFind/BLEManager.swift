@@ -115,12 +115,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     // These thresholds are starting points — tune them with your actual hardware.
     // RSSI values are negative; closer to 0 = stronger signal = closer.
     private func proximityFromRSSI(_ rssi: Double) -> Proximity {
-        switch rssi {
-        case ..<(-85): return .far
-        case -85 ..< -70: return .near
-        case -70 ..< -55: return .close
-        case -55.0...:    return .veryClose
-        default:          return .unknown
-        }
+        if rssi >= -55 { return .veryClose }
+        if rssi >= -70 { return .close }
+        if rssi >= -85 { return .near }
+        return .far
     }
 }
