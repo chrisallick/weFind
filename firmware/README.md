@@ -55,6 +55,7 @@ That's the full prototype loop. RSSI is what the iOS app will use for proximity.
 
 | Color | Pattern | Meaning |
 |---|---|---|
+| Blue | Solid | Advertising started |
 | Green | Slow blink (1s) | Advertising OK |
 | Red | Fast blink | BLE init failed — wrong board selected |
 

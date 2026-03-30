@@ -27,8 +27,12 @@ const uint8_t WEFIND_SERVICE_UUID[] = {
 BLEService ballService(WEFIND_SERVICE_UUID);
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
+  pinMode(LED_RED,   OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_BLUE,  OUTPUT);
+  digitalWrite(LED_RED,   HIGH);
+  digitalWrite(LED_GREEN, HIGH);
+  digitalWrite(LED_BLUE,  HIGH);
 
   Bluefruit.begin();
   Bluefruit.setName("weFind Ball");
@@ -44,10 +48,13 @@ void setup() {
   Bluefruit.Advertising.restartOnDisconnect(true);
   Bluefruit.Advertising.setInterval(160, 160); // 100ms interval (units of 0.625ms)
   Bluefruit.Advertising.start(0);              // 0 = advertise forever
+
+  // Blue on solid = advertising started
+  digitalWrite(LED_BLUE, LOW);
 }
 
 void loop() {
-  // Slow blink = advertising OK
-  digitalWrite(LED_BUILTIN, HIGH); delay(100);
-  digitalWrite(LED_BUILTIN, LOW);  delay(900);
+  // Slow green blink = advertising OK
+  digitalWrite(LED_GREEN, LOW);  delay(100);
+  digitalWrite(LED_GREEN, HIGH); delay(900);
 }
