@@ -2,68 +2,52 @@
  * weFind Ball — BLE Advertise Prototype
  *
  * Target: Seeed Studio XIAO BLE Sense (nRF52840)
- * Library: ArduinoBLE (install via Arduino Library Manager)
+ * Library: bluefruit.h — built into the Seeed nRF52 board package, no install needed
  *
  * What this does:
  *   - Advertises a custom BLE service UUID so an iPhone can detect the ball
- *   - Blinks the onboard red LED once per second to confirm it's running
- *   - That's it — this is the simplest possible "phone finds ball" prototype
+ *   - Blinks the onboard LED once per second to confirm it's running
  *
  * Setup:
- *   1. Install ArduinoBLE via Arduino IDE > Tools > Manage Libraries
- *   2. Select board: Seeed nRF52 Boards > Seeed XIAO BLE Sense - nRF52840
- *   3. Upload this sketch
- *   4. Open nRF Connect app on iPhone, scan — you should see "weFind Ball"
+ *   1. Select board: Seeed nRF52 Boards > Seeed XIAO BLE Sense - nRF52840
+ *   2. Upload this sketch
+ *   3. Open nRF Connect app on iPhone, scan — you should see "weFind Ball"
  */
 
-#include <ArduinoBLE.h>
+#include <bluefruit.h>
 
 // Custom service UUID for the weFind ball.
 // This is what the iOS app will scan for.
-// Generate your own at: https://www.uuidgenerator.net/
-#define WEFIND_SERVICE_UUID "A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
+// 128-bit UUID — keep this consistent across firmware and iOS app
+const uint8_t WEFIND_SERVICE_UUID[] = {
+  0x90, 0x78, 0x56, 0x34, 0x12, 0xEF, 0xCD, 0xAB,
+  0x90, 0x78, 0xF6, 0xE5, 0xD4, 0xC3, 0xB2, 0xA1
+};
 
 BLEService ballService(WEFIND_SERVICE_UUID);
 
-// Onboard LEDs on XIAO BLE Sense (active LOW)
-#define LED_RED   LEDR
-#define LED_GREEN LEDG
-#define LED_BLUE  LEDB
-
 void setup() {
-  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
-  // LEDs are active LOW on XIAO BLE Sense
-  pinMode(LED_RED,   OUTPUT);
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(LED_BLUE,  OUTPUT);
-  digitalWrite(LED_RED,   HIGH);
-  digitalWrite(LED_GREEN, HIGH);
-  digitalWrite(LED_BLUE,  HIGH);
+  Bluefruit.begin();
+  Bluefruit.setName("weFind Ball");
 
-  if (!BLE.begin()) {
-    Serial.println("BLE init failed — check board selection");
-    // Flash red rapidly to signal failure
-    while (1) {
-      digitalWrite(LED_RED, LOW);  delay(100);
-      digitalWrite(LED_RED, HIGH); delay(100);
-    }
-  }
+  ballService.begin();
 
-  BLE.setLocalName("weFind Ball");
-  BLE.setAdvertisedService(ballService);
-  BLE.addService(ballService);
-  BLE.advertise();
+  // Configure and start advertising
+  Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
+  Bluefruit.Advertising.addTxPower();
+  Bluefruit.Advertising.addService(ballService);
+  Bluefruit.ScanResponse.addName();
 
-  Serial.println("weFind Ball advertising — open nRF Connect on iPhone to verify");
-  Serial.print("Service UUID: ");
-  Serial.println(WEFIND_SERVICE_UUID);
+  Bluefruit.Advertising.restartOnDisconnect(true);
+  Bluefruit.Advertising.setInterval(160, 160); // 100ms interval (units of 0.625ms)
+  Bluefruit.Advertising.start(0);              // 0 = advertise forever
 }
 
 void loop() {
-  BLE.poll();
-
-  // Slow green blink = advertising OK
-  digitalWrite(LED_GREEN, LOW);  delay(100);
-  digitalWrite(LED_GREEN, HIGH); delay(900);
+  // Slow blink = advertising OK
+  digitalWrite(LED_BUILTIN, HIGH); delay(100);
+  digitalWrite(LED_BUILTIN, LOW);  delay(900);
 }
